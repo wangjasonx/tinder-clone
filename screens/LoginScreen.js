@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
+  KeyboardAvoidingView,
   Button,
   TextInput,
   Image,
@@ -11,6 +12,7 @@ import {
   StatusBar,
   Alert,
   ImageBackground,
+  Platform,
 } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
@@ -28,16 +30,10 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: false,
-    });
-  }, []);
-
   const image = { uri: "https://tinder.com/static/tinder.png" };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView className="flex-1" behavior="padding">
       <View style={styles.whiteSheet} />
       <ImageBackground
         source={image}
@@ -90,7 +86,7 @@ const LoginScreen = ({ navigation }) => {
           </TouchableHighlight>
         </View>
       </SafeAreaView>
-    </View>
+    </KeyboardAvoidingView>
     // <View style={styles.container}>
     //   {userInfo === null ? (
     //     <Button

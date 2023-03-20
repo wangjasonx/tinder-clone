@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
+  KeyboardAvoidingView,
   Button,
   TextInput,
   Image,
@@ -27,16 +28,10 @@ export default function SignUpScreen({ navigation }) {
     }
   };
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: false,
-    });
-  }, []);
-
   const image = { uri: "https://tinder.com/static/tinder.png" };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView className="flex-1" behavior="padding">
       <View style={styles.whiteSheet} />
       <ImageBackground
         source={image}
@@ -89,7 +84,7 @@ export default function SignUpScreen({ navigation }) {
           </TouchableHighlight>
         </View>
       </SafeAreaView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

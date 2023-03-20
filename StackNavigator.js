@@ -25,7 +25,7 @@ export default function StackNavigator() {
 
   return (
     <Stack.Navigator
-      defaultScreenOptions={{
+      screenOptions={{
         headerShown: false,
       }}
     >

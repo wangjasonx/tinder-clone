@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
 
   const memoedValue = useMemo(
     () => ({
-      user,
+      user: user,
       setUser,
     }),
     [user]

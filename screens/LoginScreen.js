@@ -1,59 +1,96 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Button, TextInput, Image, SafeAreaView,
-TouchableHighlight, StatusBar, Alert } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../firebase';
+import React, { useLayoutEffect, useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  TextInput,
+  Image,
+  SafeAreaView,
+  TouchableHighlight,
+  StatusBar,
+  Alert,
+  ImageBackground,
+} from "react-native";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 const LoginScreen = ({ navigation }) => {
-
   // const { promptAsync, userInfo, request } = useAuth();
   const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("");
 
   const onHandleLogin = () => {
-      if (email !== "" && password !== "") {
-          signInWithEmailAndPassword(auth, email, password)
-              .then(() => console.log("Login Success!"))
-              .catch((err) => Alert.alert("Login failed", err.message));
-      }
+    if (email !== "" && password !== "") {
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => console.log("Login Success!"))
+        .catch((err) => Alert.alert("Login failed", err.message));
+    }
   };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, []);
+
+  const image = { uri: "https://tinder.com/static/tinder.png" };
 
   return (
     <View style={styles.container}>
-            <View style={styles.whiteSheet} />
-            <SafeAreaView style={styles.form}>
-                <Text style={styles.title}>Login</Text>
-                <TextInput 
-                    style={styles.input}
-                    placeholder="Enter email"
-                    autoCapitalize='none'
-                    keyboardType='email-address'
-                    textContentType='emailAddress'
-                    autoFocus={false}
-                    value={email}
-                    onChangeText={(text) => setEmail(text)}
-                />
-                <TextInput 
-                    style={styles.input}
-                    placeholder="Enter password"
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                    secureTextEntry={true}
-                    textContentType='password'
-                    value={password}
-                    onChangeText={(text) => setPassword(text)}
-                />
-                <TouchableHighlight style={styles.button} onPress={onHandleLogin}>
-                    <Text style={{fontWeight: 'bold', color: '#fff', fontSize:18}}>Log In</Text>
-                </TouchableHighlight>
-                <View style={{marginTop: 20, flexDirection: 'row', alignItems: 'center', alignSelf: 'center'}}>
-                    <Text style={{color: 'gray', fontWeight: '600', fontSize: 14}}>Don't have an account? </Text>
-                    <TouchableHighlight onPress={() => navigation.navigate("SignUp")}>
-                        <Text style={{color: '#f57c00', fontWeight: '600', fontSize: 14}}> Sign Up</Text>
-                    </TouchableHighlight>
-                </View>
-            </SafeAreaView>
+      <View style={styles.whiteSheet} />
+      <ImageBackground
+        source={image}
+        resizeMode="cover"
+        style={styles.backImage}
+      ></ImageBackground>
+      <SafeAreaView style={styles.form}>
+        <Text style={styles.title}>Login</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          autoFocus={false}
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Enter password"
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry={true}
+          textContentType="password"
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+        />
+        <TouchableHighlight style={styles.button} onPress={onHandleLogin}>
+          <Text style={{ fontWeight: "bold", color: "#fff", fontSize: 18 }}>
+            Log In
+          </Text>
+        </TouchableHighlight>
+        <View
+          style={{
+            marginTop: 20,
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "center",
+          }}
+        >
+          <Text style={{ color: "gray", fontWeight: "600", fontSize: 14 }}>
+            Don't have an account?{" "}
+          </Text>
+          <TouchableHighlight onPress={() => navigation.navigate("SignUp")}>
+            <Text style={{ color: "#FF5864", fontWeight: "600", fontSize: 14 }}>
+              {" "}
+              Sign Up
+            </Text>
+          </TouchableHighlight>
         </View>
+      </SafeAreaView>
+    </View>
     // <View style={styles.container}>
     //   {userInfo === null ? (
     //     <Button
@@ -67,10 +104,10 @@ const LoginScreen = ({ navigation }) => {
     //     <Text style={styles.text}>{userInfo.name}</Text>
     //   )}
     // </View>
-  )
-}
+  );
+};
 
-export default LoginScreen
+export default LoginScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -79,10 +116,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    fontWeight: 'bold',
-    color: "orange",
+    fontWeight: "bold",
+    color: "#FF5864",
     alignSelf: "center",
-    paddingBottom: 24,
+    zIndex: 1,
+    bottom: 24,
   },
   input: {
     backgroundColor: "#F6F7FB",
@@ -94,30 +132,33 @@ const styles = StyleSheet.create({
   },
   backImage: {
     width: "100%",
-    height: 340,
+    height: 380,
     position: "absolute",
     top: 0,
-    resizeMode: 'cover',
+    resizeMode: "cover",
+    zIndex: -1,
   },
   whiteSheet: {
-    width: '100%',
-    height: '75%',
+    width: "100%",
+    height: "62%",
     position: "absolute",
     bottom: 0,
-    backgroundColor: '#fff',
+    backgroundColor: "white",
     borderTopLeftRadius: 60,
+    zIndex: 0,
   },
   form: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginHorizontal: 30,
+    top: 135,
   },
   button: {
-    backgroundColor: '#f57c00',
+    backgroundColor: "#FF5864",
     height: 58,
     borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 40,
   },
 });

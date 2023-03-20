@@ -6,6 +6,7 @@ import { signOut } from "firebase/auth";
 import { auth, database } from "../firebase";
 import { AntDesign } from "@expo/vector-icons";
 import colors from "../colors";
+import { SafeAreaView } from "react-native";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -16,32 +17,31 @@ const HomeScreen = () => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{
-            marginRight: 10,
-          }}
-          onPress={onSignOut}
-        >
-          <AntDesign
-            name="logout"
-            size={24}
-            color={colors.gray}
-            style={{ marginRight: 10 }}
-          />
-        </TouchableOpacity>
-      ),
+      headerShown: false,
     });
   }, [navigation]);
 
   return (
-    <View>
+    <SafeAreaView>
+      <TouchableOpacity
+        style={{
+          marginRight: 10,
+        }}
+        onPress={onSignOut}
+      >
+        <AntDesign
+          name="logout"
+          size={24}
+          color={colors.gray}
+          style={{ marginRight: 10 }}
+        />
+      </TouchableOpacity>
       <Text>I am the Homescreen</Text>
       <Button
         title="Go to Chat Screen"
         onPress={() => navigation.navigate("Chat")}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

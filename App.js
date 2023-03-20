@@ -1,6 +1,6 @@
-import StackNavigator from './StackNavigator';
-import { NavigationContainer } from '@react-navigation/native';
-import { AuthProvider } from './hooks/useAuth';
+import StackNavigator from "./StackNavigator";
+import { NavigationContainer } from "@react-navigation/native";
+import { AuthProvider } from "./hooks/useAuth";
 
 export default function App() {
   return (
@@ -8,6 +8,6 @@ export default function App() {
       <AuthProvider>
         <StackNavigator />
       </AuthProvider>
-    </NavigationContainer>    
+    </NavigationContainer>
   );
 }

@@ -1,54 +1,105 @@
 import { TouchableOpacity, View, Text, Button, StyleSheet } from "react-native";
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useLayoutEffect } from "react";
-import { signOut } from "firebase/auth";
-import { auth, database } from "../firebase";
+import { getAuth, signOut } from "firebase/auth";
+import { auth, database, db } from "../firebase";
 import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import colors from "../colors";
 import { SafeAreaView } from "react-native";
 
 import { Image } from "react-native";
 import Swiper from "react-native-deck-swiper";
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  Query,
+  where,
+} from "firebase/firestore";
 
-const DUMMY_DATA = [
-  {
-    firstName: "Jason",
-    lastName: "Wang",
-    job: "Software Developer",
-    photoURL:
-      "https://s1.narvii.com/image/ntmadk6v5fotxkw2hf7xy7azdf2yygo2_hq.jpg",
-    age: 22,
-    id: 1,
-  },
-  {
-    firstName: "Jason",
-    lastName: "Wang",
-    job: "Software Developer",
-    photoURL:
-      "https://ih1.redbubble.net/image.939692630.5711/st,small,507x507-pad,600x600,f8f8f8.jpg",
-    age: 22,
-    id: 2,
-  },
-  {
-    firstName: "Jason",
-    lastName: "Wang",
-    job: "Software Developer",
-    photoURL:
-      "https://i.pinimg.com/736x/bf/57/6a/bf576a8b45668b408d04c5729c528c4b--potato-kawaii.jpg",
-    age: 22,
-    id: 3,
-  },
-];
-
-const HomeScreen = () => {
-  const navigation = useNavigation();
+const HomeScreen = ({ navigation }) => {
+  // const navigation = useNavigation();
 
   const onSignOut = () => {
     signOut(auth).catch((error) => console.log(error));
   };
 
   const swipeRef = useRef(null);
+  const [profiles, setProfiles] = useState([]);
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  useLayoutEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+      if (!snapshot.exists()) {
+        navigation.navigate("Modal");
+      }
+    });
+
+    return unsubscribe();
+  });
+
+  useEffect(() => {
+    let unsubscribe;
+
+    const fetchCards = async () => {
+      const passes = getDocs(collection(db, "users", user.uid, "passes")).then(
+        (snapshot) => snapshot.docs.map((doc) => doc.id)
+      );
+
+      const swipes = getDocs(collection(db, "users", user.uid, "swipes")).then(
+        (snapshot) => snapshot.docs.map((doc) => doc.id)
+      );
+
+      const passedUserIds = passes.length > 0 ? passes : ["test"];
+
+      const swipedUserIds = swipes.length > 0 ? swipes : ["test"];
+
+      unsubscribe = onSnapshot(
+        query(
+          collection(db, "users"),
+          where("id", "not-in", [...passedUserIds, ...swipedUserIds])
+        ),
+        (snapshot) => {
+          setProfiles(
+            snapshot.docs
+              .filter((doc) => doc.id !== user.uid)
+              .map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }))
+          );
+        }
+      );
+    };
+
+    fetchCards();
+    return unsubscribe;
+  }, []);
+
+  const swipeLeft = (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    console.log(`You swiped PASS on ${userSwiped.displayName}`);
+
+    setDoc(doc(db, "users", user.uid, "passes", userSwiped.id), userSwiped);
+  };
+
+  const swipeRight = async (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    console.log(
+      `You swiped MATCH on ${userSwiped.displayName} (${userSwiped.job})`
+    );
+
+    setDoc(doc(db, "users", user.uid, "swipes", userSwiped.id), userSwiped);
+  };
 
   return (
     <SafeAreaView className="flex-1">
@@ -61,7 +112,7 @@ const HomeScreen = () => {
             style={{ marginRight: 10 }}
           />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("Modal")}>
           <Image source={require("../logo.png")} className="h-14 w-14" />
         </TouchableOpacity>
 
@@ -77,11 +128,13 @@ const HomeScreen = () => {
           stackSize={5}
           cardIndex={0}
           verticalSwipe={false}
-          onSwipedLeft={() => {
+          onSwipedLeft={(cardIndex) => {
             console.log("Swipe PASS");
+            swipeLeft(cardIndex);
           }}
-          onSwipedRight={() => {
+          onSwipedRight={(cardIndex) => {
             console.log("Swipe MATCH");
+            swipeRight(cardIndex);
           }}
           backgroundColor={"#4FD0E9"}
           overlayLabels={{
@@ -105,30 +158,49 @@ const HomeScreen = () => {
           }}
           animateCardOpacity
           containerStyle={{ backgroundColor: "transparent" }}
-          cards={DUMMY_DATA}
-          renderCard={(card) => (
-            <View key={card.id} className="relative bg-white h-3/4 rounded-xl">
-              <Image
-                className="absolute h-full w-full rounded-xl"
-                source={{
-                  uri: card.photoURL,
-                }}
-              />
+          cards={profiles}
+          renderCard={(card) =>
+            card ? (
               <View
-                className="absolute bottom-0 bg-white w-full flex-row 
+                key={card.id}
+                className="relative bg-white h-3/4 rounded-xl"
+              >
+                <Image
+                  className="absolute h-full w-full rounded-xl"
+                  source={{
+                    uri: card.photoURL,
+                  }}
+                />
+                <View
+                  className="absolute bottom-0 bg-white w-full flex-row 
                 justify-between items-center h-20 px-6 py-2 rounded-b-xl"
+                  style={styles.cardShadow}
+                >
+                  <View>
+                    <Text className="text-xl font-bold">
+                      {card.displayName}
+                    </Text>
+                    <Text>{card.job}</Text>
+                  </View>
+                  <Text className="text-2xl font-bold">{card.age}</Text>
+                </View>
+              </View>
+            ) : (
+              <View
+                className="relative bg-white h-3/4 rounded-xl justify-center items-center"
                 style={styles.cardShadow}
               >
-                <View>
-                  <Text className="text-xl font-bold">
-                    {card.firstName} {card.lastName}
-                  </Text>
-                  <Text>{card.job}</Text>
-                </View>
-                <Text className="text-2xl font-bold">{card.age}</Text>
+                <Text className="font-bold pb-5">No more profiles</Text>
+
+                <Image
+                  className="h-100 w-full"
+                  height={100}
+                  width={100}
+                  source={{ uri: "https://links.papareact.com/6gb" }}
+                />
               </View>
-            </View>
-          )}
+            )
+          }
         />
       </View>
 

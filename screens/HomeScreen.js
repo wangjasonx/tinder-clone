@@ -13,12 +13,16 @@ import Swiper from "react-native-deck-swiper";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
   Query,
+  serverTimestamp,
+  setDoc,
   where,
 } from "firebase/firestore";
+import generateId from "../lib/GenerateId";
 
 const HomeScreen = ({ navigation }) => {
   // const navigation = useNavigation();
@@ -47,13 +51,13 @@ const HomeScreen = ({ navigation }) => {
     let unsubscribe;
 
     const fetchCards = async () => {
-      const passes = getDocs(collection(db, "users", user.uid, "passes")).then(
-        (snapshot) => snapshot.docs.map((doc) => doc.id)
-      );
+      const passes = await getDocs(
+        collection(db, "users", user.uid, "passes")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
 
-      const swipes = getDocs(collection(db, "users", user.uid, "swipes")).then(
-        (snapshot) => snapshot.docs.map((doc) => doc.id)
-      );
+      const swipes = await getDocs(
+        collection(db, "users", user.uid, "swipes")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
 
       const passedUserIds = passes.length > 0 ? passes : ["test"];
 
@@ -79,7 +83,7 @@ const HomeScreen = ({ navigation }) => {
 
     fetchCards();
     return unsubscribe;
-  }, []);
+  }, [db]);
 
   const swipeLeft = (cardIndex) => {
     if (!profiles[cardIndex]) return;
@@ -94,11 +98,57 @@ const HomeScreen = ({ navigation }) => {
     if (!profiles[cardIndex]) return;
 
     const userSwiped = profiles[cardIndex];
-    console.log(
-      `You swiped MATCH on ${userSwiped.displayName} (${userSwiped.job})`
-    );
 
-    setDoc(doc(db, "users", user.uid, "swipes", userSwiped.id), userSwiped);
+    console.log("I AM HERE...");
+
+    const loggedInProfile = await (
+      await getDoc(doc(db, "users", user.uid))
+    ).data();
+
+    console.log(loggedInProfile);
+
+    console.log("I AM HERE");
+
+    // Check if the user swiped on you...
+    getDoc(doc(db, "users", userSwiped.id, "swipes", user.uid))
+      .then((documentSnapshot) => {
+        if (documentSnapshot.exists()) {
+          // The user has matched with you before you matched with them...
+          console.log(" You matched with someone!");
+
+          setDoc(
+            doc(db, "users", user.uid, "swipes", userSwiped.id),
+            userSwiped
+          );
+
+          // Create a match
+          setDoc(doc(db, "matches", generateId(user.uid, userSwiped.id)), {
+            users: {
+              [user.uid]: loggedInProfile,
+              [userSwiped.id]: userSwiped,
+            },
+            usersMatched: [user.uid, userSwiped.id],
+            timestamp: serverTimestamp(),
+          });
+
+          navigation.navigate("Match", {
+            loggedInProfile,
+            userSwiped,
+          });
+        } else {
+          console.log(
+            `You swiped MATCH on ${userSwiped.displayName} (${userSwiped.job})`
+          );
+
+          setDoc(
+            doc(db, "users", user.uid, "swipes", userSwiped.id),
+            userSwiped
+          );
+        }
+      })
+      .catch((exception) => {
+        console.log(exception);
+      });
   };
 
   return (

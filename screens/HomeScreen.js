@@ -37,15 +37,15 @@ const HomeScreen = ({ navigation }) => {
   const auth = getAuth();
   const user = auth.currentUser;
 
-  useLayoutEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
-      if (!snapshot.exists()) {
-        navigation.navigate("Modal");
-      }
-    });
-
-    return unsubscribe();
-  });
+  useLayoutEffect(
+    () =>
+      onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+        if (!snapshot.exists()) {
+          navigation.navigate("Modal");
+        }
+      }),
+    []
+  );
 
   useEffect(() => {
     let unsubscribe;
